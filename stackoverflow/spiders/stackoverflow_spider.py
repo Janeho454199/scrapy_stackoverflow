@@ -22,8 +22,10 @@ logger.addHandler(fh)
 class StackoverflowSpider(scrapy.Spider):
 
     name = "stackoverflow"
+    allowed_domains = ['stackoverflow.com']
 
-    def __init__(self):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.count = 1
 
     def start_requests(self):
@@ -32,7 +34,7 @@ class StackoverflowSpider(scrapy.Spider):
         for url in urls:
             yield scrapy.Request(url=url, callback=self.parse)
 
-    def parse(self, response):
+    def parse(self, response, *args, **kwargs):
         for index in range(1, 51):
             self.count += 1
             if self.count % 100 == 0:
@@ -46,8 +48,8 @@ class StackoverflowSpider(scrapy.Spider):
                 'div[1]/div[2]/span[1]/text()').extract())
             item['views'] = "".join(
                 sel.xpath('div[1]/div[3]/span[1]/text()').extract()).split()[0].replace(",", "")
-            item['questions'] = "".join(sel.xpath('div[2]/div[1]/a/text()').extract())
-            item['links'] = "".join(sel.xpath('div[2]/div[1]/a/@href').extract())
-            item['tags'] = ",".join(sel.xpath('div[2]/div[3]/div[1]/a/text()').extract())
+            item['questions'] = "".join(sel.xpath('div[2]//h3/a/text()').extract())
+            item['links'] = "".join(sel.xpath('div[2]//h3/a/@href').extract())
+            item['tags'] = ",".join(sel.xpath('div[2]/div[2]/div[1]/a/text()').extract())
 
             yield item
